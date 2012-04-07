@@ -1,0 +1,80 @@
+<html>
+<head>
+  <script src="/socket.io/socket.io.js"></script>
+	<script src="http://www.google.com/jsapi" type="text/javascript"></script>
+	<script type="text/javascript">
+		google.load("jquery", "1.7.1")
+		google.load("swfobject", "2.2");
+	</script> 
+	<script type="text/javascript">
+	  $(document).ready(function(){
+      var socket = io.connect("http://localhost:8080");
+      var ytplayer = null;
+      socket.emit("get_id", function(id){
+        $("#screen-id").text("Screen ID: " + id);
+      });
+      
+      socket.on("msg", function(data){
+  	    console.log(data);
+  	    
+  	    loadVideo(data.value);
+  	  });
+	  });
+	  /*
+	   * Change out the video that is playing
+	   */
+	  
+	  // Update a particular HTML element with a new value
+	  function updateHTML(elmId, value) {
+		  $("#"+elmId).html(value);
+	  }
+	  
+	  // Loads the selected video into the player.
+	  function loadVideo(videoID) {
+	    console.log(ytplayer);
+			if(ytplayer) {
+			  ytplayer.loadVideoById(videoID);
+			}
+	  }
+	  
+	  // This function is called when an error is thrown by the player
+	  function onPlayerError(errorCode) {
+			alert("An error occured of type:" + errorCode);
+	  }
+	  
+	  // This function is automatically called by the player once it loads
+	  function onYouTubePlayerReady(playerId) {
+			ytplayer = document.getElementById("ytPlayer");
+			ytplayer.addEventListener("onError", "onPlayerError");
+	  }
+	  
+	  // The "main method" of this sample. Called when someone clicks "Run".
+	  function loadPlayer() {
+			// The video to load
+			var videoID = "ylLzyHk54Z0"
+			// Lets Flash from another domain call JavaScript
+			var params = { allowScriptAccess: "always" };
+			// The element id of the Flash embed
+			var atts = { id: "ytPlayer" };
+			// All of the magic handled by SWFObject (http://code.google.com/p/swfobject/)
+			swfobject.embedSWF("http://www.youtube.com/v/" + videoID +
+							   "?version=3&enablejsapi=1&playerapiid=player1",
+						   "videoDiv", "480", "295", "9", null, null, params, atts);
+	  }
+
+    // loadPlayer();
+	  
+    function _run() {
+         loadPlayer();
+    }
+    google.setOnLoadCallback(_run);
+	</script>
+</head>
+<body style="font-family: Arial;border: 0 none;">
+  <div class="wrapper">
+    <div id="screen-id"></div>
+    <div id="now-playing"></div>
+    <div id="videoDiv">Loading...</div>
+  </div>
+</body>
+</html>

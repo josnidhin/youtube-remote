@@ -1,0 +1,78 @@
+<html>
+<head>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  
+  <script>
+    $(document).ready(function(){
+      var socket = io.connect("http://localhost:8080");
+      var yDataApi = "http://gdata.youtube.com/feeds/api/videos";
+      var screenID = null;
+      
+      $("#search").hide();
+      
+      $("#set-screen").submit(function(){
+        var id = $("#screen_id").val();
+        socket.emit("screen_connect", {"screen_id": id}, function(result){
+          if(result) {
+            screenID = id;
+            $("#screen-connect").hide();
+            $("#search").show();
+          } else {
+            alert("Screen unavailable");
+          }
+        });
+        return false;
+      });
+      
+      $("#youtube-search").submit(function(){
+        var query = $("#query").val();
+        $.getJSON(yDataApi + '?q=' + query + '&alt=json-in-script&callback=?', function(data) {
+          $('#playlist').empty();
+          $.each(data.feed.entry, function(i, item) {
+            var title = item['title']['$t'];
+            var video = item['id']['$t'];
+            video = video.replace('http://gdata.youtube.com/feeds/api/videos/','http://www.youtube.com/watch?v=');  
+            videoID = video.replace('http://www.youtube.com/watch?v=',''); // removing link and getting the video ID
+            $('#playlist').append('<a class="links" href="'+videoID+'">'+title+'-'+videoID+'</a></br>');
+          });
+        });
+        return false;
+      });
+      
+      var emitMsg = function(id, action, title){
+        var msg = {'screen_id': screenID, 'action': action, 'value': id}
+        if(title !== undefined){
+          msg.title = title;
+        }
+        socket.emit("msg", msg);
+      };
+
+      $(document).on("click", "a", function(e){
+        e.preventDefault();
+        var id = $(this).attr("href");
+        emitMsg(id, "play");
+        return false;
+      });
+
+    });
+  </script>
+</head>
+<body>
+<div id="screen-connect">
+  <form id="set-screen">
+    <label>Set Screen ID</label>
+    <input type="text" name="screen_id" id="screen_id"/>
+    <input type="submit" value="Connect"/>
+  </form>
+</div>
+<div id="search">
+  <form id="youtube-search">
+    <label>Search Videos</label>
+    <input type="text" name="query" id="query"/>
+    <input type="submit" value="Search">
+  </form>
+</div>
+<div id="playlist"></div>
+</body>
+</html>
