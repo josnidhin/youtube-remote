@@ -10,28 +10,24 @@
 	  $(document).ready(function(){
       var socket = io.connect("http://localhost:8080");
       var ytplayer = null;
+      var currentVideo = null;
+      
       socket.emit("get_id", function(id){
         $("#screen-id").text("Screen ID: " + id);
       });
       
       socket.on("msg", function(data){
-  	    console.log(data);
-  	    
-  	    loadVideo(data.value);
+        if(data.action === "play") {
+          if(currentVideo === null || data.value !== currentVideo) {
+            currentVideo = data.value;
+      	    loadVideo(data.value);
+    	    }
+  	    }
   	  });
 	  });
-	  /*
-	   * Change out the video that is playing
-	   */
-	  
-	  // Update a particular HTML element with a new value
-	  function updateHTML(elmId, value) {
-		  $("#"+elmId).html(value);
-	  }
 	  
 	  // Loads the selected video into the player.
 	  function loadVideo(videoID) {
-	    console.log(ytplayer);
 			if(ytplayer) {
 			  ytplayer.loadVideoById(videoID);
 			}
@@ -61,8 +57,6 @@
 							   "?version=3&enablejsapi=1&playerapiid=player1",
 						   "videoDiv", "480", "295", "9", null, null, params, atts);
 	  }
-
-    // loadPlayer();
 	  
     function _run() {
          loadPlayer();
